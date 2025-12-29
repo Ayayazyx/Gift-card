@@ -4,36 +4,74 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>2026 互动贺卡</title>
+    
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: -apple-system, sans-serif; }
-        #container { position: relative; width: 100%; height: 100%; }
+        :root {
+            --primary: #FF5E5E;
+            --secondary: #FFD93D;
+            --bg: #FFF9F0;
+            --text: #4A4A4A;
+        }
+
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: -apple-system, "PingFang SC", sans-serif; }
+        
+        /* 配置面板 - 卡通风格 */
         #configPanel {
             position: absolute; z-index: 200; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(20px);
+            background: var(--bg);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: white; transition: opacity 0.6s ease;
+            color: var(--text); transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.5s;
         }
+
+        h2 { color: var(--primary); font-size: 1.8rem; margin-bottom: 5px; text-shadow: 2px 2px 0px #fff; }
+        .subtitle { font-size: 0.9rem; color: #999; margin-bottom: 30px; }
+
+        .upload-container { width: 85%; max-width: 400px; display: flex; flex-direction: column; gap: 20px; }
+
         .upload-card {
-            background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px;
-            margin: 10px; width: 75%; text-align: center; border: 1px solid rgba(255,255,255,0.1);
+            background: #fff; padding: 20px; border-radius: 24px;
+            text-align: center; border: 4px solid #F0F0F0;
+            box-shadow: 0 8px 0px #F0F0F0;
+            display: flex; flex-direction: column; align-items: center;
         }
-        .upload-btn { display: inline-block; padding: 10px 20px; background: #444; border-radius: 10px; margin-top: 8px; cursor: pointer; font-size: 0.85rem; }
-        .preview-box { width: 50px; height: 50px; margin: 8px auto 0; border-radius: 8px; display: none; object-fit: cover; border: 2px solid #ff4d4d; }
+
+        .upload-card p { margin: 0 0 10px 0; font-weight: bold; font-size: 1rem; }
+
+        .upload-btn {
+            display: inline-block; padding: 12px 24px; 
+            background: var(--secondary); color: #845D00;
+            border-radius: 16px; cursor: pointer; font-size: 0.9rem; font-weight: bold;
+            transition: transform 0.1s;
+        }
+        .upload-btn:active { transform: scale(0.95); }
+
+        .preview-box { width: 80px; height: 80px; margin-top: 15px; border-radius: 18px; display: none; object-fit: cover; border: 3px solid var(--secondary); }
+
         #startBtn { 
-            margin-top: 25px; padding: 15px 50px; background: linear-gradient(135deg, #ff4d4d, #b30000);
-            color: white; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: bold;
+            margin-top: 40px; padding: 18px 60px; 
+            background: linear-gradient(135deg, #FF7E7E, #FF5E5E);
+            color: white; border: none; border-radius: 25px; 
+            font-size: 1.3rem; font-weight: bold;
+            box-shadow: 0 10px 0px #D64545;
+            transition: all 0.1s;
         }
+        #startBtn:active { transform: translateY(5px); box-shadow: 0 5px 0px #D64545; }
+
+        /* 游戏主体样式保持一致 */
         .bg-img { position: absolute; width: 100%; height: 100%; object-fit: cover; }
         #imgB { z-index: 5; opacity: 0; transform: scale(0.6); transition: all 1.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
         #imgB.active { opacity: 1; transform: scale(1); }
-        #fogCanvas { position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; filter: blur(12px); opacity: 0; transition: opacity 1.2s ease; pointer-events: none; }
+        
+        #fogCanvas { position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; filter: blur(12px); opacity: 0; transition: opacity 1.5s ease; pointer-events: none; }
         #fogCanvas.active { pointer-events: auto; }
+
         #instruction { 
-            position: absolute; bottom: 15%; left: 50%; transform: translateX(-50%); 
+            position: absolute; bottom: 12%; left: 50%; transform: translateX(-50%); 
             color: white; z-index: 11; text-align: center; pointer-events: none; 
-            background: rgba(0,0,0,0.6); padding: 12px 20px; border-radius: 25px; 
-            backdrop-filter: blur(10px); display: none; font-size: 0.9rem;
+            background: rgba(255, 94, 94, 0.9); padding: 15px 30px; border-radius: 30px; 
+            box-shadow: 0 6px 0px #D64545; display: none; width: 70%; font-weight: bold;
         }
+
         .shake { animation: shake 0.12s 4; }
         @keyframes shake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-8px, 8px); } 75% { transform: translate(8px, -8px); } }
     </style>
@@ -42,24 +80,30 @@
 
 <div id="container">
     <div id="configPanel">
-        <h2 style="margin-bottom: 5px;">2026 互动贺卡</h2>
-        <div class="upload-card">
-            <p style="margin: 0;">1. 设置封面图片</p>
-            <label class="upload-btn"><input type="file" id="inputA" accept="image/*" style="display:none;">选择图片</label>
-            <img id="prevA" class="preview-box">
+        <h2>✨ 互动贺卡制作</h2>
+        <p class="subtitle">给好友一个惊喜吧</p>
+        
+        <div class="upload-container">
+            <div class="upload-card">
+                <p>📸 第一步：封面图</p>
+                <label class="upload-btn"><input type="file" id="inputA" accept="image/*" style="display:none;">选择本地图片</label>
+                <img id="prevA" class="preview-box">
+            </div>
+
+            <div class="upload-card">
+                <p>🎁 第二步：惊喜图</p>
+                <label class="upload-btn"><input type="file" id="inputB" accept="image/*" style="display:none;">选择本地图片</label>
+                <img id="prevB" class="preview-box">
+            </div>
         </div>
-        <div class="upload-card">
-            <p style="margin: 0;">2. 设置惊喜图片</p>
-            <label class="upload-btn"><input type="file" id="inputB" accept="image/*" style="display:none;">选择图片</label>
-            <img id="prevB" class="preview-box">
-        </div>
-        <button id="startBtn">制作完成</button>
+
+        <button id="startBtn">开始互动</button>
     </div>
 
     <img id="imgA" class="bg-img">
     <img id="imgB" class="bg-img">
     <canvas id="fogCanvas"></canvas>
-    <div id="instruction">💨 请对着麦克风<br><b>用力呵气</b></div>
+    <div id="instruction">💨 请对着麦克风<br>用力哈一口气...</div>
 
     <audio id="bgMusic" src="110.WAV" loop preload="auto"></audio>
     <audio id="successSound" src="图片出现声.mp3" preload="auto"></audio>
@@ -80,38 +124,37 @@
     let isFinished = false;
     let breathEnergy = 0;
 
-    // 图片选择逻辑
-    function setupUpload(inputID, imgID, prevID) {
-        document.getElementById(inputID).onchange = (e) => {
+    function setupUpload(inputEl, targetImg, prevEl) {
+        inputEl.onchange = (e) => {
             const file = e.target.files[0];
             if (file) {
                 const url = URL.createObjectURL(file);
-                document.getElementById(imgID).src = url;
-                document.getElementById(prevID).src = url;
-                document.getElementById(prevID).style.display = 'block';
+                targetImg.src = url;
+                prevEl.src = url;
+                prevEl.style.display = 'block';
             }
         };
     }
-    setupUpload('inputA', 'imgA', 'prevA');
-    setupUpload('inputB', 'imgB', 'prevB');
+    setupUpload(document.getElementById('inputA'), imgA, document.getElementById('prevA'));
+    setupUpload(document.getElementById('inputB'), imgB, document.getElementById('prevB'));
 
     function initCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        ctx.fillStyle = 'rgba(230, 240, 255, 0.98)';
+        ctx.fillStyle = 'rgba(235, 245, 255, 0.98)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
     startBtn.onclick = async () => {
-        if (!imgA.src || !imgB.src) return alert("请先上传两张图片！");
-        
+        if (!imgA.src || !imgB.src) return alert("要上传两张图才能开始哦！");
         bgMusic.play().catch(() => {});
         successSound.load();
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            configPanel.style.transform = 'translateY(-100%)';
             configPanel.style.opacity = '0';
-            setTimeout(() => { configPanel.style.display = 'none'; }, 600);
+            setTimeout(() => configPanel.style.display = 'none', 600);
             instruction.style.display = 'block';
             initCanvas();
 
@@ -119,26 +162,24 @@
             const analyser = audioContext.createAnalyser();
             const microphone = audioContext.createMediaStreamSource(stream);
             microphone.connect(analyser);
-            analyser.fftSize = 256;
+            analyser.fftSize = 512;
             const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
             function listen() {
                 if (isFoggy) return;
                 analyser.getByteFrequencyData(dataArray);
-                
-                // 聚焦极低频
-                let lowFreq = (dataArray[0] + dataArray[1] + dataArray[2]) / 3;
+                let lowFreqSum = 0;
+                for (let i = 0; i < 10; i++) lowFreqSum += dataArray[i];
+                let average = lowFreqSum / 10;
 
-                // 只有当声音非常响亮（哈气）时才增长，否则快速消退
-                if (lowFreq > 125) { 
-                    breathEnergy += 8; 
+                // 强化防误触判定
+                if (average > 120) { 
+                    breathEnergy += 10;
                 } else {
-                    breathEnergy -= 5;
+                    breathEnergy = Math.max(0, breathEnergy - 3);
                 }
-                
-                breathEnergy = Math.max(0, breathEnergy);
 
-                if (breathEnergy > 120) {
+                if (breathEnergy > 100) {
                     activateFog();
                 } else {
                     requestAnimationFrame(listen);
@@ -146,7 +187,7 @@
             }
             listen();
         } catch (err) {
-            alert("请授予麦克风权限！如果是本地预览，请使用浏览器打开。");
+            alert("请授予麦克风权限，否则无法玩耍哈气效果哦！");
         }
     };
 
@@ -154,19 +195,17 @@
         isFoggy = true;
         canvas.classList.add('active');
         canvas.style.opacity = '1';
-        instruction.innerHTML = "✨ 镜面已起雾<br>手指擦亮惊喜";
+        instruction.innerHTML = "✨ 镜面起雾啦<br>快擦亮它！";
         setTimeout(() => { instruction.style.opacity = '0'; }, 3000);
     }
 
     function handleDraw(e) {
         if (!isFoggy || isFinished) return;
-        const rect = canvas.getBoundingClientRect();
-        const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-        const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-
+        const x = e.touches ? e.touches[0].clientX : e.clientX;
+        const y = e.touches ? e.touches[0].clientY : e.clientY;
         ctx.globalCompositeOperation = 'destination-out';
         ctx.beginPath();
-        ctx.arc(x, y, 60, 0, Math.PI * 2);
+        ctx.arc(x, y, 70, 0, Math.PI * 2);
         ctx.fill();
         checkProgress();
     }
@@ -175,13 +214,12 @@
         if (isFinished) return;
         const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
         let clear = 0;
-        for (let i = 3; i < pixels.length; i += 4) { if (pixels[i] < 150) clear++; }
-        
-        if (clear / (pixels.length / 4) > 0.4) {
+        for (let i = 3; i < pixels.length; i += 4) if (pixels[i] < 150) clear++;
+        if (clear / (pixels.length / 4) > 0.45) {
             isFinished = true;
             setTimeout(() => {
                 bgMusic.pause();
-                successSound.play();
+                successSound.play(); 
                 document.getElementById('container').classList.add('shake');
                 canvas.style.opacity = '0';
                 imgB.classList.add('active');
@@ -191,7 +229,7 @@
 
     canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleDraw(e); }, { passive: false });
     canvas.addEventListener('touchmove', (e) => { e.preventDefault(); handleDraw(e); }, { passive: false });
-    window.onresize = initCanvas;
 </script>
+
 </body>
 </html>
